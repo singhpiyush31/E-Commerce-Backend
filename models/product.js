@@ -22,7 +22,7 @@ const productsSchema = new mongoose.Schema({
     },
     category: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Cateogry",
+        ref: "Category",
         required: true,
     },
     stock: {
@@ -42,7 +42,7 @@ const productsSchema = new mongoose.Schema({
     },
     isActive: {
         type: Boolean,
-        required: true,
+        default: true,
     },
     user: {
         type: mongoose.Schema.Types.ObjectId,
@@ -52,4 +52,4 @@ const productsSchema = new mongoose.Schema({
 
 }, {timestamps: true });
 
-module.exports = mongoose.model("Products", productsSchema);
+module.exports = mongoose.model("Product", productsSchema);
