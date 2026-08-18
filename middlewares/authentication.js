@@ -7,7 +7,7 @@ exports.userAuth = async (req, res, next) => {
         const { token } = req.cookies;
 
         if (!token) {
-            return res.status(404).json({ message: "Please login again!" });
+            return res.status(401).json({ message: "Please login again!" });
         }
 
         const obj = jwt.verify(token, process.env.JWT_SECRET);
@@ -17,18 +17,18 @@ exports.userAuth = async (req, res, next) => {
         const user = await User.findById(id).select("-password");
 
         if (!user) {
-            return res.status(404).json({ message: "Please login again!" });
+            return res.status(401).json({ message: "Please login again!" });
         }
         req.user = user;
         next();
     } catch (err) {
-        res.status(500).json({ message: "Internal Server Error" });
+        res.status(401).json({ message: "Unauthorized user!", error: err.message });
     }
 };
 
 exports.isAdmin = (req, res, next) => {
     if (req.user.role !== "Admin") {
-        return res.status(404).json({ message: "Only admins are allowed!" });
+        return res.status(403).json({ message: "Only admins are allowed!" });
     }
     next();
 };
