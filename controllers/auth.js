@@ -11,7 +11,7 @@ exports.register = async (req, res) => {
 
         if (!name || !email || !password) {
             return res
-                .status(404)
+                .status(400)
                 .json({ message: "All fields are required!" });
         }
         if (!emailRegex.test(email)) {
@@ -71,7 +71,7 @@ exports.login = async (req, res) => {
 
         if (!email || !password) {
             return res
-                .status(404)
+                .status(400)
                 .json({ message: "All fields are required!" });
         }
 
