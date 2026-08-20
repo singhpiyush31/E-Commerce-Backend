@@ -27,6 +27,18 @@ exports.createCategory = async (req, res) => {
             category,
         });
     } catch (err) {
-        res.status(500).json({ message: "Internal Server Error" });
+        res.status(500).json({ message: "Internal Server Error", error: err.message });
+    }
+};
+
+
+exports.getCategory = async (req,res) => {
+    try {
+        const category = await Category.find().select("-user").sort({ _id: -1 });
+        let totalCategories = category.length;
+
+        res.status(200).json({ message: "Categories: ", category, totalCategories });
+    } catch (err) {
+        res.status(500).json({ message: "Internal Server Error!", error: err.message });
     }
 };
