@@ -1,4 +1,5 @@
 const Category = require("../models/category");
+const Product = require("../models/product");
 
 exports.createCategory = async (req, res) => {
     try {
@@ -35,6 +36,7 @@ exports.createCategory = async (req, res) => {
 exports.getCategory = async (req,res) => {
     try {
         const category = await Category.find()
+            .select("-user -updatedBy")
             .sort({ _id: -1 });
         let totalCategories = category.length;
 
@@ -57,6 +59,37 @@ exports.updateCategory = async (req, res) => {
             return res.status(404).json({ message: "Category not found!" });
         }
         res.status(200).json({ message: "Updated Category: ", updateCategory });
+    } catch (err) {
+        res.status(500).json({
+            message: "Internal Server Error!",
+            error: err.message,
+        });
+    }
+};
+
+exports.deleteCategory = async (req, res) => {
+    try {
+        const categoryId = req.params.id;
+
+        const totalProducts = await Product.countDocuments({
+            category: categoryId,
+        });
+
+        if (totalProducts > 0) {
+            return res
+                .status(400)
+                .json({
+                    message: `Cannot delete! ${totalProducts} products are using this category`,
+                });
+        }
+
+        const deleteCategory = await Category.findByIdAndDelete(categoryId);
+
+        if (!deleteCategory) {
+            return res.status(404).json({ message: "Category not found!" });
+        }
+        
+        res.status(200).json({ message: "Category deleted successfully!" });
     } catch (err) {
         res.status(500).json({
             message: "Internal Server Error!",
