@@ -35,8 +35,6 @@ exports.createCategory = async (req, res) => {
 exports.getCategory = async (req,res) => {
     try {
         const category = await Category.find()
-            .populate("user", "name email")
-            .populate("updatedBy", "name email")
             .sort({ _id: -1 });
         let totalCategories = category.length;
 
@@ -52,7 +50,7 @@ exports.updateCategory = async (req, res) => {
         const { name, description } = req.body;
         const updateCategory = await Category.findByIdAndUpdate(
             categoryId,
-            { name, description, user: req.user._id },
+            { name, description, updatedBy: req.user._id },
             { returnDocument: "after", runValidators: true },
         )
         if (!updateCategory) {
