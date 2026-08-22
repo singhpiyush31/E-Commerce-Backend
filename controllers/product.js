@@ -98,3 +98,22 @@ exports.getProduct = async (req, res) => {
         });
     }
 };
+
+exports.getProductById = async (req, res) => {
+    try {
+        const productId = req.params.id;
+        const product = await Product.findOne({
+            _id: productId,
+            isActive: true,
+        })
+            .populate("category", "name")
+            .select("-user");
+
+        if (!product) {
+            return res.status(404).json({ message: "Product not found!" });
+        }
+        res.status(200).json({ message: "Product", product });
+    } catch (err) {
+        res.status(500).json({ message: "Internal Server Error", error: err.message });
+    }
+};
