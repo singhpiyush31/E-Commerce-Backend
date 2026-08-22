@@ -1,5 +1,7 @@
 const Product = require("../models/product");
 const Category = require("../models/category");
+const { getPagination } = require("../utils/pagination");
+const { searchRegex, numberRange } = require("../utils/filter");
 
 exports.createProduct = async (req, res) => {
     try {
@@ -29,6 +31,65 @@ exports.createProduct = async (req, res) => {
         res.status(201).json({
             message: "Product created successfully!",
             product,
+        });
+    } catch (err) {
+        res.status(500).json({
+            message: "Internal Server Error!",
+            error: err.message,
+        });
+    }
+};
+
+exports.getProduct = async (req, res) => {
+    try {
+        const { page, limit, skip } = getPagination(req.query);
+
+        let sortOptions = { createdAt: -1 };
+
+        if (req.query.sort === "oldest") {
+            sortOptions = { createdAt: 1 };
+        } else if (req.query.sort === "price-high") {
+            sortOptions = { price: -1 };
+        } else if (req.query.sort === "price-low") {
+            sortOptions = { price: 1 };
+        }
+
+        const filter = { isActive: true };
+
+        if (req.query.search) {
+            filter.name = searchRegex(req.query.search);
+        }
+        if (req.query.minPrice || req.query.maxPrice) {
+            filter.price = numberRange(req.query.minPrice, req.query.maxPrice);
+        }
+
+        if (req.query.brand) {
+            filter.brand = searchRegex(req.query.brand);
+        }
+        if (req.query.category) {
+            filter.category = req.query.category;
+        }
+        if (req.query.inStock === "true") {
+            filter.stock = { $gte: 1 };
+        }
+
+        const product = await Product.find(filter)
+            .populate("category", "name")
+            .select("-user")
+            .sort(sortOptions)
+            .skip(skip)
+            .limit(limit);
+
+        const totalProducts = await Product.countDocuments(filter);
+        const totalPage = Math.ceil(totalProducts / limit);
+
+        res.status(200).json({
+            message: "Products",
+            product,
+            page: page,
+            limit: limit,
+            totalProducts,
+            totalPage: totalPage,
         });
     } catch (err) {
         res.status(500).json({
