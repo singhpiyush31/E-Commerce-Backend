@@ -6,6 +6,7 @@ const cookieParser = require('cookie-parser');
 const { connectDB } = require("./config/database");
 const authRouter = require("./routes/auth");
 const categoryRouter = require("./routes/category");
+const productRouter = require("./routes/product");
 
 const app = express();
 
@@ -16,6 +17,7 @@ const PORT = process.env.PORT || 3000;
 
 app.use("/auth", authRouter);
 app.use("/category", categoryRouter);
+app.use("/product", productRouter);
 
 connectDB()
     .then(() => {
