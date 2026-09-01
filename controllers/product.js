@@ -114,6 +114,76 @@ exports.getProductById = async (req, res) => {
         }
         res.status(200).json({ message: "Product", product });
     } catch (err) {
-        res.status(500).json({ message: "Internal Server Error", error: err.message });
+        res.status(500).json({
+            message: "Internal Server Error",
+            error: err.message,
+        });
+    }
+};
+
+exports.deleteProductById = async (req, res) => {
+    try {
+        const productId = req.params.id;
+
+        const deleteProduct = await Product.findByIdAndDelete(productId);
+
+        if (!deleteProduct) {
+            return res.status(404).json({ message: "Product not found!" });
+        }
+        res.status(200).json({ message: "Product deleted successfully!" });
+    } catch (err) {
+        res.status(500).json({
+            message: "Internal Server Error!",
+            error: err.message,
+        });
+    }
+};
+
+exports.updateProductById = async (req, res) => {
+    try {
+        const productId = req.params.id;
+        const {
+            name,
+            description,
+            price,
+            category,
+            stock,
+            image,
+            brand,
+            isActive,
+        } = req.body;
+
+        if (category) {
+            const isExist = await Category.findById(category);
+            if (!isExist) {
+                return res.status(404).json({ message: "Category not found!" });
+            }
+        }
+        const product = await Product.findByIdAndUpdate(
+            productId,
+            {
+                name,
+                description,
+                price,
+                category,
+                stock,
+                image,
+                brand,
+                isActive,
+            },
+            { returnDocument: "after", runValidators: true },
+        );
+        if (!product) {
+            return res.status(404).json({ message: "Product not found!" });
+        }
+        res.status(200).json({
+            message: "Product updated successfully!",
+            product,
+        });
+    } catch (err) {
+        res.status(500).json({
+            message: "Internal Server Error!",
+            error: err.message,
+        });
     }
 };
