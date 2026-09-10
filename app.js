@@ -1,12 +1,13 @@
 require("dotenv").config();
 
 const express = require("express");
-const cookieParser = require('cookie-parser');
+const cookieParser = require("cookie-parser");
 
 const { connectDB } = require("./config/database");
 const authRouter = require("./routes/auth");
 const categoryRouter = require("./routes/category");
 const productRouter = require("./routes/product");
+const cartRouter = require("./routes/cart");
 
 const app = express();
 
@@ -18,6 +19,7 @@ const PORT = process.env.PORT || 3000;
 app.use("/auth", authRouter);
 app.use("/category", categoryRouter);
 app.use("/product", productRouter);
+app.use("/cart", cartRouter);
 
 connectDB()
     .then(() => {
