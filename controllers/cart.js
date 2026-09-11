@@ -26,7 +26,7 @@ exports.createCart = async (req, res) => {
         }
         if (product.stock === 0) {
             return res
-                .status(404)
+                .status(400)
                 .json({ message: "Product is out of stock!" });
         }
 
@@ -63,6 +63,43 @@ exports.createCart = async (req, res) => {
     } catch (err) {
         res.status(500).json({
             message: "Internal Server Error",
+            error: err.message,
+        });
+    }
+};
+
+exports.getCart = async (req, res) => {
+    try {
+        const cart = await Cart.findOne({ user: req.user._id }).populate(
+            "items.product",
+            "name stock price image isActive",
+        );
+
+        if (!cart) {
+            return res.status(200).json({
+                message: "Your Cart: ",
+                items: [],
+                totalQuantity: 0,
+                totalAmount: 0,
+            });
+        }
+
+        let totalQuantity = 0;
+        let totalAmount = 0;
+        for (let i = 0; i < cart.items.length; i++) {
+            totalQuantity += cart.items[i].quantity;
+            totalAmount += cart.items[i].product.price * cart.items[i].quantity;
+        }
+
+        res.status(200).json({
+            message: "Your Cart: ",
+            items: cart.items,
+            totalQuantity,
+            totalAmount,
+        });
+    } catch (err) {
+        res.status(500).json({
+            message: "Internal Server Error!",
             error: err.message,
         });
     }
