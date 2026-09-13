@@ -119,3 +119,33 @@ exports.myOrder = async (req, res) => {
         });
     }
 };
+
+exports.getOrderById = async (req, res) => {
+    try {
+        const orderId = req.params.id;
+        const loggedInUser = req.user._id.toString();
+
+        const order = await Order.findById(orderId);
+
+        if (!order) {
+            return res.status(404).json({ message: "Order not found!" });
+        }
+
+        const orderUserId = order.user.toString();
+
+        if (orderUserId !== loggedInUser) {
+            if (req.user.role !== "Admin") {
+                return res
+                    .status(403)
+                    .json({ message: "You can view only your order!" });
+            }
+        }
+
+        res.status(200).json({ message: "Order: ", order });
+    } catch (err) {
+        res.status(500).json({
+            message: "Internal Server Error!",
+            error: err.message,
+        });
+    }
+};
