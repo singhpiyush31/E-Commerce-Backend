@@ -1,5 +1,4 @@
 const Order = require("../models/order");
-const User = require("../models/user");
 const Cart = require("../models/cart");
 const Product = require("../models/product");
 
@@ -50,7 +49,7 @@ exports.createOrder = async (req, res) => {
 
         for (let i = 0; i < orderItems.length; i++) {
             const productId = orderItems[i].product;
-            let product = await Product.findOne(productId);
+            let product = await Product.findById(productId);
             product.stock = product.stock - orderItems[i].quantity;
             await product.save();
         }
