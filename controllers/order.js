@@ -149,3 +149,83 @@ exports.getOrderById = async (req, res) => {
         });
     }
 };
+
+exports.updateOrderStatusById = async (req, res) => {
+    try {
+        const orderId = req.params.id;
+        const loggedInUser = req.user._id.toString();
+        const { status } = req.body;
+
+        if (!status) {
+            return res.status(400).json({ message: "Status is required!" });
+        }
+
+        const allowedStatus = [
+            "Pending",
+            "Confirmed",
+            "Shipped",
+            "Delivered",
+            "Cancelled",
+        ];
+
+        if (!allowedStatus.includes(status)) {
+            return res.status(400).json({ message: "Invalid status!" });
+        }
+
+        const order = await Order.findById(orderId);
+
+        if (!order) {
+            return res.status(404).json({ message: "Order not found!" });
+        }
+
+        const orderUserId = order.user.toString();
+
+        if (req.user.role !== "Admin") {
+            if (loggedInUser !== orderUserId) {
+                return res
+                    .status(403)
+                    .json({ message: "You cannot access this order!" });
+            }
+            if (status !== "Cancelled") {
+                return res
+                    .status(400)
+                    .json({ message: "You can only cancel your order!" });
+            }
+        }
+
+        if (order.status === "Cancelled") {
+            return res
+                .status(400)
+                .json({ message: "Order is already cancelled!" });
+        }
+
+        if (status === "Cancelled" && order.status === "Delivered") {
+            return res
+                .status(400)
+                .json({ message: "Delivered order cannot be cancelled!" });
+        }
+
+        order.status = status;
+        await order.save();
+
+        if (status === "Cancelled") {
+            for (let i = 0; i < order.items.length; i++) {
+                const productId = order.items[i].product;
+                await Product.findByIdAndUpdate(
+                    { _id: productId },
+                    { $inc: { stock: order.items[i].quantity } },
+                );
+            }
+        }
+
+        res.status(200).json({
+            message: "Order status updated successfully!",
+            order,
+        });
+    } catch (err) {
+        res.status(500).json({
+            message: "Internal Server Error!",
+            error: err.message,
+        });
+    }
+};
