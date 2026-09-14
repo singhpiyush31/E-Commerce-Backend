@@ -128,3 +128,54 @@ exports.clearCart = async (req, res) => {
         });
     }
 };
+
+exports.removeProductFromCart = async (req, res) => {
+    try {
+        const productId = req.params.productId;
+        const loggedInUser = req.user._id;
+
+        if (!productId) {
+            return res.status(400).json({ message: "ProductId is required!" });
+        }
+
+        const cart = await Cart.findOne({ user: loggedInUser });
+
+        if (!cart) {
+            return res.status(404).json({ message: "Cart not found!" });
+        }
+
+        const item = cart.items.find((val) => {
+            return val.product.toString() === productId;
+        });
+
+        if (!item) {
+            return res.status(404).json({ message: "Product not in cart! " });
+        }
+
+        let newItem = [];
+        // for (let i = 0; i < cart.items.length; i++) {
+        //     if(cart.items[i].product.toString() !== productId) {
+        //         newItem.push(cart.items[i]);
+        //     }
+        // }
+        // cart.items = newItem;
+
+        newItem = cart.items.filter((val) => {
+            return val.product.toString() !== productId;
+        });
+
+        cart.items = newItem;
+
+        await cart.save();
+
+        res.status(200).json({
+            message: "Product removed from the cart",
+            cart,
+        });
+    } catch (err) {
+        res.status(500).json({
+            message: "Internal Server Error!",
+            error: err.message,
+        });
+    }
+};
