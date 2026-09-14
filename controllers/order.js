@@ -211,10 +211,9 @@ exports.updateOrderStatusById = async (req, res) => {
         if (status === "Cancelled") {
             for (let i = 0; i < order.items.length; i++) {
                 const productId = order.items[i].product;
-                await Product.findByIdAndUpdate(
-                    { _id: productId },
-                    { $inc: { stock: order.items[i].quantity } },
-                );
+                await Product.findByIdAndUpdate(productId, {
+                    $inc: { stock: order.items[i].quantity },
+                });
             }
         }
 
