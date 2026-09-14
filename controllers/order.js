@@ -228,3 +228,55 @@ exports.updateOrderStatusById = async (req, res) => {
         });
     }
 };
+
+exports.getAllOrders = async (req, res) => {
+    try {
+        const { page, limit, skip } = getPagination(req.query);
+
+        const filter = {};
+
+        if (req.query.search) {
+            filter["items.name"] = searchRegex(req.query.search);
+        }
+        if(req.query.user) {
+            filter.user = req.query.user;
+        }
+        if (req.query.status) {
+            filter.status = searchRegex(req.query.status);
+        }
+        if (req.query.paymentMethod) {
+            filter.paymentMethod = searchRegex(req.query.paymentMethod);
+        }
+        if (req.query.from || req.query.to) {
+            filter.createdAt = dateRange(req.query.from, req.query.to);
+        }
+
+        let sort = -1;
+        if (req.query.sort == "oldest") {
+            sort = 1;
+        }
+        const totalOrder = await Order.countDocuments(filter);
+        const totalPage = Math.ceil(totalOrder / limit);
+
+        const order = await Order.find(filter)
+            .populate("user", "name email")
+            .sort({ createdAt: sort })
+            .skip(skip)
+            .limit(limit);
+
+        res.status(200).json({
+            message: "All orders: ",
+            order,
+            page,
+            limit: limit,
+            skip: skip,
+            totalPage: totalPage,
+            totalOrder: totalOrder,
+        });
+    } catch (err) {
+        res.status(500).json({
+            message: "Internal Server Error",
+            error: err.message,
+        });
+    }
+};
