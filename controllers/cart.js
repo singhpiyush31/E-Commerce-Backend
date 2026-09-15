@@ -179,3 +179,63 @@ exports.removeProductFromCart = async (req, res) => {
         });
     }
 };
+
+exports.updateProductQuantity = async (req, res) => {
+    try {
+        const productId = req.params.productId.toString();
+        const loggedInUser = req.user._id;
+        const quantity = parseInt(req.body.quantity);
+
+        if (quantity < 0 || isNaN(quantity)) {
+            return res
+                .status(400)
+                .json({ message: "Quantity must be 0 or more" });
+        }
+
+        const cart = await Cart.findOne({ user: loggedInUser });
+
+        if (!cart) {
+            return res.status(404).json({ message: "Cart not found!" });
+        }
+
+        const item = cart.items.find((val) => {
+            return val.product.toString() === productId;
+        });
+
+        if (!item) {
+            return res.status(404).json({ message: "Product not in cart!" });
+        }
+
+        if (quantity === 0) {
+            cart.items = cart.items.filter(
+                (val) => val.product.toString() !== productId,
+            );
+            await cart.save();
+            return res
+                .status(200)
+                .json({ message: "Product removed from cart!" });
+        }
+
+        const product = await Product.findById(productId);
+
+        if (!product) {
+            return res.status(404).json({ message: "Product not found!" });
+        }
+
+        if (quantity > product.stock) {
+            return res.status(400).json({
+                message: `Only ${product.stock} items available in stock`,
+            });
+        }
+
+        item.quantity = quantity;
+        await cart.save();
+
+        res.status(200).json({ message: "Cart updated successfully!", cart });
+    } catch (err) {
+        res.status(500).json({
+            message: "Internal Server Error!",
+            error: err.message,
+        });
+    }
+};
